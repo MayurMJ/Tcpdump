@@ -12,5 +12,5 @@ struct parsedArgs {
 
 
 int getDefaultDevice(parsedArgs *args);
-
+int openConnection(parsedArgs *args);
 #endif

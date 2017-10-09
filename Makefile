@@ -13,3 +13,5 @@ clean :
 	\rm -fr obj/*
 	\rm -fr mydump
 	\rm -fr *~
+	\rm -fr src/*~
+	\rm -fr include/*~

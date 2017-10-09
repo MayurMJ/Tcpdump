@@ -7,7 +7,7 @@
 
 using namespace std;
 void parseArgs(parsedArgs *args, char **argv, int n) {
-	for(int i = 0; i < n; i++) {
+	for(int i = 1; i < n; i++) {
 		if(strcmp(argv[i], "-i") == 0 ) {		
 			args->interface = string(argv[i+1]);
 			i++;
@@ -21,6 +21,7 @@ void parseArgs(parsedArgs *args, char **argv, int n) {
 			i++;
 		}
 		else {
+			if(argv[i] != NULL)			
 			args->exp = string(argv[i]);
 		}
 	}
@@ -30,8 +31,9 @@ int main(int argc, char** argv) {
 	parsedArgs *args = new parsedArgs();
 	parseArgs(args, argv, argc);
 	if(args->interface.size() == 0 && args->file.size() == 0) {
-		if(!getDefaultDevice(args)) return -1;
+		getDefaultDevice(args);
 	}
+	openConnection(args);
 }
 
 

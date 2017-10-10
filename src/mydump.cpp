@@ -32,8 +32,14 @@ int main(int argc, char** argv) {
 	parseArgs(args, argv, argc);
 	if(args->interface.size() == 0 && args->file.size() == 0) {
 		getDefaultDevice(args);
+		openConnection(args, 0);
 	}
-	openConnection(args);
+	else if(args->interface.size() == 0) {
+		openConnection(args, 1);
+	}
+	else {
+		openConnection(args, 0);
+	}
 }
 
 

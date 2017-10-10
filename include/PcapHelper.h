@@ -1,6 +1,7 @@
 #ifndef PCAPHELPER_H
 #define PCAPHELPER_H
 #include<string>
+#include<cstring>
 #include<pcap.h>
 #include<iostream>
 #include<arpa/inet.h>

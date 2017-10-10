@@ -30,6 +30,7 @@ void parseArgs(parsedArgs *args, char **argv, int n) {
 int main(int argc, char** argv) {
 	parsedArgs *args = new parsedArgs();
 	parseArgs(args, argv, argc);
+	cout << args->exp;
 	if(args->interface.size() == 0 && args->file.size() == 0) {
 		getDefaultDevice(args);
 		openConnection(args, 0);

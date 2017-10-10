@@ -16,26 +16,6 @@ const u_char *payload; /* Packet payload */
 u_int size_ip;
 u_int size_packet;
 
-void determineProtocol(u_char ip_p) {
-	switch(ip_p) {
-		case IPPROTO_TCP:
-			cout << " TCP" << endl;
-			break;
-		case IPPROTO_UDP:
-			cout << " UDP" << endl;
-			return;
-		case IPPROTO_ICMP:
-			cout << " ICMP" << endl;
-			return;
-		case IPPROTO_IP:
-			cout << " IP" << endl;
-			return;
-		default:
-			cout << " unknown" << endl;
-			return;
-	}
-}
-
 
 int getDefaultDevice(parsedArgs *args) {
 	char errbuf[PCAP_ERRBUF_SIZE];
@@ -70,7 +50,8 @@ string printASCIIHex(const u_char *ptr, int len) {
 }
 
 string printPayload(const u_char *payload, int len) {
-	string pl = "";	
+	string pl = "";
+	if(len == 0) return pl;	
 	int  buffer = len;
 	const u_char *chptr = payload;	
 	while((16 / buffer) == 0) {
@@ -78,13 +59,13 @@ string printPayload(const u_char *payload, int len) {
 		pl += printASCIIHex(chptr, lineLen);
 		buffer -= lineLen;
 		chptr += lineLen;
+		if(buffer == 0) break;
 	}
 	pl += printASCIIHex(chptr, buffer);
 	return pl;
 }
 
 void my_packet_handler(u_char *args, const struct pcap_pkthdr *packet_header, const u_char *packet) {
-	cout << endl;
 	string printData = "";
 	stringstream stream;
 	time_t t = packet_header->ts.tv_sec; //usec;
@@ -153,14 +134,18 @@ void my_packet_handler(u_char *args, const struct pcap_pkthdr *packet_header, co
 	std::string result(stream.str());	
 	printData += result;
 	payload = (u_char *)(packet + SIZE_ETHERNET + size_ip + size_packet);
-	size_t size_payload = ntohs(ip->ip_len) - (size_ip + size_packet);
-	printData += printPayload(payload, size_payload);
-	cout << printData;	
+	if(strstr((const char *)payload, (const char *)args)) {	
+		size_t size_payload = ntohs(ip->ip_len) - (size_ip + size_packet);
+		printData += printPayload(payload, size_payload);
+		cout << printData;	
+	}
 	return;
 }
 
 int openConnection(parsedArgs *args, int file) {
-	const char *device;	
+	const char *device;
+	struct bpf_program fp;
+	bpf_u_int32 net;
 	if(file) {
 		device = args->file.c_str(); 
 	}
@@ -180,6 +165,17 @@ int openConnection(parsedArgs *args, int file) {
 		cerr << "Could not open device" << device << " " << errbuf << endl;
 		return 2;
 	}
-    	pcap_loop(handle, 0, my_packet_handler, NULL);
+	if(args->exp.size() != 0) {
+		const char *filter_exp = args->exp.c_str();
+		if (pcap_compile(handle, &fp, filter_exp, 0, net) == -1) {
+		 	cerr << "Couldn't parse filter " << filter_exp << pcap_geterr(handle) << endl;
+		 	return(2);
+	 	}
+	 	if (pcap_setfilter(handle, &fp) == -1) {
+		 	cerr << "Couldn't install filter" << filter_exp << pcap_geterr(handle) << endl;
+		 	return(2);
+	 	}
+	}
+    	pcap_loop(handle, 0, my_packet_handler, (u_char *) args->str.c_str());
 	return 0;
 }

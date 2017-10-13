@@ -29,8 +29,9 @@ int getDefaultDevice(parsedArgs *args) {
 	return(0);
 }
 
-string printASCIIHex(const u_char *ptr, int len) {
+string printASCIIHex(const u_char *ptr, int len, string &contPl) {
 	stringstream stream;
+	stringstream astream;
 	stream << endl;
 	char buf[5];		
 	int i = 0;	
@@ -42,26 +43,33 @@ string printASCIIHex(const u_char *ptr, int len) {
 	for(; i < 16; i++) stream << "   ";
 	stream << "  ";
 	for(i = 0; i < len; i++) {
-		if(isprint(ptr[i])) stream << ptr[i];
-		else stream << ".";
+		if(isprint(ptr[i])) {
+			stream << ptr[i];
+			astream << ptr[i];
+		}
+		else { 
+			stream << ".";
+			astream << ".";
+		}
 	}
+	contPl += string (astream.str());
 	std::string result(stream.str());
 	return result;
 }
 
-string printPayload(const u_char *payload, int len) {
+string printPayload(const u_char *payload, int len, string &contPl) {
 	string pl = "";
 	if(len == 0) return pl;	
 	int  buffer = len;
 	const u_char *chptr = payload;	
 	while((16 / buffer) == 0) {
 		int lineLen = 16 % buffer;
-		pl += printASCIIHex(chptr, lineLen);
+		pl += printASCIIHex(chptr, lineLen, contPl);
 		buffer -= lineLen;
 		chptr += lineLen;
 		if(buffer == 0) break;
 	}
-	pl += printASCIIHex(chptr, buffer);
+	pl += printASCIIHex(chptr, buffer, contPl);
 	return pl;
 }
 
@@ -134,11 +142,11 @@ void my_packet_handler(u_char *args, const struct pcap_pkthdr *packet_header, co
 	std::string result(stream.str());	
 	printData += result;
 	payload = (u_char *)(packet + SIZE_ETHERNET + size_ip + size_packet);
-	if(strstr((const char *)payload, (const char *)args)) {	
-		size_t size_payload = ntohs(ip->ip_len) - (size_ip + size_packet);
-		printData += printPayload(payload, size_payload);
-		cout << printData;	
-	}
+	size_t size_payload = ntohs(ip->ip_len) - (size_ip + size_packet);
+	string pl = "";
+	printData += printPayload(payload, size_payload, pl);
+	if(strstr(pl.c_str(), (const char *)args))
+		cout << printData << endl;
 	return;
 }
 

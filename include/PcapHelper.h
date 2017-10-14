@@ -8,10 +8,24 @@
 #include<time.h>
 #include <netinet/ether.h>
 #include <netinet/in.h>
-#include <netinet/udp.h>
-#include <netinet/ip_icmp.h>
 #include <sstream> 
 using namespace std;
+struct udphdr
+{
+	u_int16_t source;
+	u_int16_t dest;
+	u_int16_t len;
+	u_int16_t check;
+};
+
+struct icmphdr
+{
+	u_int8_t type;                /* message type */
+	u_int8_t code;                /* type sub-code */
+	u_int16_t checksum;
+	u_int32_t rest;
+};
+
 struct parsedArgs {
 	string interface;
 	string file;

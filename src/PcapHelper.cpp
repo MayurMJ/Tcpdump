@@ -25,7 +25,6 @@ int getDefaultDevice(parsedArgs *args) {
 		cerr << "Couldn't find default device: " << errbuf;
 		return(2);
 	}
-	cout << "Device: " << args->interface;
 	return(0);
 }
 
@@ -100,10 +99,10 @@ void my_packet_handler(u_char *args, const struct pcap_pkthdr *packet_header, co
 	//cout << " len " << packet_header->len;
 	ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
 	size_ip = IP_HL(ip)*4;
-	if (size_ip < 20) {
+	//if (size_ip < 20) {
 		//printf("   * Invalid IP header length: %u bytes\n", size_ip);
-		return;
-	}
+		//return;
+	//}
 	/* print source and destination IP addresses */
 
 	switch(ip->ip_p) {
@@ -112,7 +111,7 @@ void my_packet_handler(u_char *args, const struct pcap_pkthdr *packet_header, co
 			size_packet = TH_OFF(tcp)*4;
 			if (size_packet < 20) {
 				//printf("   * Invalid TCP header length: %u bytes\n", size_tcp);
-				return;
+				//return;
 			}
 			stream << " " << inet_ntoa(ip->ip_src);
 			stream << ":" << ntohs(tcp->th_dport);
@@ -122,7 +121,7 @@ void my_packet_handler(u_char *args, const struct pcap_pkthdr *packet_header, co
 			break;
 		case IPPROTO_UDP:
 			udp = (struct udphdr*)(packet + SIZE_ETHERNET + size_ip);
-			size_packet = sizeof(udp);
+			size_packet = sizeof(udphdr);
 			
 			stream << " " << inet_ntoa(ip->ip_src);
 			stream << ":" << ntohs(udp->dest);
@@ -132,21 +131,28 @@ void my_packet_handler(u_char *args, const struct pcap_pkthdr *packet_header, co
 			break;
 		case IPPROTO_ICMP:
 			icmp = (struct icmphdr*)(packet + SIZE_ETHERNET + size_ip);
-			size_packet = sizeof(icmp);
+			size_packet = sizeof(icmphdr);
 			stream << " ICMP";			
 			break;
 		default:
-			stream << " unknown";
+			size_ip = 0;
+			size_packet = 0;
+			stream << " OTHER";
 			break;
 	}
 	std::string result(stream.str());	
 	printData += result;
 	payload = (u_char *)(packet + SIZE_ETHERNET + size_ip + size_packet);
-	size_t size_payload = ntohs(ip->ip_len) - (size_ip + size_packet);
+	size_t size_payload= packet_header->caplen - (SIZE_ETHERNET + size_ip + size_packet);
 	string pl = "";
 	printData += printPayload(payload, size_payload, pl);
-	if(strstr(pl.c_str(), (const char *)args))
+	if(args!=NULL) {
+		if(strstr(pl.c_str(), (const char *)args))
+			cout << printData << endl;
+	}
+	else {
 		cout << printData << endl;
+	}
 	return;
 }
 
@@ -154,6 +160,7 @@ int openConnection(parsedArgs *args, int file) {
 	const char *device;
 	struct bpf_program fp;
 	bpf_u_int32 net;
+	bpf_u_int32 mask;
 	if(file) {
 		device = args->file.c_str(); 
 	}
@@ -167,6 +174,9 @@ int openConnection(parsedArgs *args, int file) {
 		handle = pcap_open_offline(device, errbuf);
 	}
 	else {	
+		if(pcap_lookupnet(device, &net, &mask, errbuf) == -1) {
+			cerr << "Could not get netmask for device" << device << errbuf << endl;
+		}
 		handle = pcap_open_live(device, BUFSIZ, 1, timeout_limit, errbuf);
 	}	
 	if (handle == NULL) {

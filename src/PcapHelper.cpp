@@ -114,9 +114,9 @@ void my_packet_handler(u_char *args, const struct pcap_pkthdr *packet_header, co
 				//return;
 			}
 			stream << " " << inet_ntoa(ip->ip_src);
-			stream << ":" << ntohs(tcp->th_dport);
-			stream << " -> " << inet_ntoa(ip->ip_dst);
 			stream << ":" << ntohs(tcp->th_sport);
+			stream << " -> " << inet_ntoa(ip->ip_dst);
+			stream << ":" << ntohs(tcp->th_dport);
 			stream << " TCP";			
 			break;
 		case IPPROTO_UDP:
@@ -124,9 +124,9 @@ void my_packet_handler(u_char *args, const struct pcap_pkthdr *packet_header, co
 			size_packet = sizeof(udphdr);
 			
 			stream << " " << inet_ntoa(ip->ip_src);
-			stream << ":" << ntohs(udp->dest);
-			stream << " -> " << inet_ntoa(ip->ip_dst);
 			stream << ":" << ntohs(udp->source);
+			stream << " -> " << inet_ntoa(ip->ip_dst);
+			stream << ":" << ntohs(udp->dest);
 			stream << " UDP";
 			break;
 		case IPPROTO_ICMP:

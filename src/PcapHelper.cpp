@@ -148,10 +148,10 @@ void my_packet_handler(u_char *args, const struct pcap_pkthdr *packet_header, co
 	printData += printPayload(payload, size_payload, pl);
 	if(args!=NULL) {
 		if(strstr(pl.c_str(), (const char *)args))
-			cout << printData << endl;
+			cout << printData << endl << endl;
 	}
 	else {
-		cout << printData << endl;
+		cout << printData << endl << endl;
 	}
 	return;
 }

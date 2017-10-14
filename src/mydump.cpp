@@ -5,6 +5,7 @@
 #include<string>
 #include <unistd.h>
 #include"PcapHelper.h"
+#include<stdlib.h>
 
 using namespace std;
 void parseArgs(parsedArgs *args, char **argv, int n) {

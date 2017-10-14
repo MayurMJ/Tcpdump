@@ -4,7 +4,7 @@ LD_FLAGS := -lpcap
 CC_FLAGS := -I include/
 
 mydump: $(OBJ_FILES)
-	g++ $(LD_FLAGS) -o $@ $^
+	g++ -o $@ $^ $(LD_FLAGS)
 
 obj/%.o: src/%.cpp
 	g++ $(CC_FLAGS) -c -o $@ $<

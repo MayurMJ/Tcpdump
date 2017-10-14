@@ -16,6 +16,15 @@ const u_char *payload; /* Packet payload */
 u_int size_ip;
 u_int size_packet;
 
+char *ether_ntoa_rz(const struct ether_addr *addr, char *buf)
+{
+    sprintf(buf, "%02x:%02x:%02x:%02x:%02x:%02x",
+            addr->ether_addr_octet[0], addr->ether_addr_octet[1],
+            addr->ether_addr_octet[2], addr->ether_addr_octet[3],
+            addr->ether_addr_octet[4], addr->ether_addr_octet[5]);
+    return buf;
+}
+
 
 int getDefaultDevice(parsedArgs *args) {
 	char errbuf[PCAP_ERRBUF_SIZE];
@@ -86,9 +95,11 @@ void my_packet_handler(u_char *args, const struct pcap_pkthdr *packet_header, co
 	stream << string(res) << "."  << string(buf) << " ";         
 	//cout << res << "." << buf << " ";
 	ethernet = (struct sniff_ethernet*)(packet);
-	char *src = ether_ntoa((const struct ether_addr *) ethernet->ether_shost);		
+	char buffer1[18];
+	char *src = ether_ntoa_rz((const struct ether_addr *) ethernet->ether_shost, buffer1);
 	stream << string(src);
-	char *dest = ether_ntoa((const struct ether_addr *) ethernet->ether_dhost);	
+	char buffer2[18];
+	char *dest = ether_ntoa_rz((const struct ether_addr *) ethernet->ether_dhost, buffer2);	
 	stream << " -> " << string(dest) << " type 0x";
 	//printData += string(src) + " -> " + string(dest);	
 	//printData += " type 0x";
